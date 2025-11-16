@@ -22,7 +22,9 @@ export function useHabits(filter: 'my' | 'partner' | 'shared' = 'my') {
   const fetchHabits = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/habits?filter=${filter}`);
+      const res = await fetch(`/api/habits?filter=${filter}`, {
+        credentials: 'include', // Required for cookies to work on iOS
+      });
       if (!res.ok) throw new Error('Failed to fetch habits');
       const data = await res.json();
       setHabits(data.habits);
@@ -40,7 +42,10 @@ export function useHabits(filter: 'my' | 'partner' | 'shared' = 'my') {
 
   const toggleHabit = async (id: string) => {
     try {
-      const res = await fetch(`/api/habits/${id}/toggle`, { method: 'POST' });
+      const res = await fetch(`/api/habits/${id}/toggle`, { 
+        method: 'POST',
+        credentials: 'include', // Required for cookies to work on iOS
+      });
       if (!res.ok) throw new Error('Failed to toggle habit');
       await fetchHabits(); // Refresh
     } catch (err: any) {
@@ -53,6 +58,7 @@ export function useHabits(filter: 'my' | 'partner' | 'shared' = 'my') {
       const res = await fetch('/api/habits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Required for cookies to work on iOS
         body: JSON.stringify({ title, owner }),
       });
       if (!res.ok) throw new Error('Failed to create habit');

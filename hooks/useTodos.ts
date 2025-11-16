@@ -17,7 +17,9 @@ export function useTodos() {
   const fetchTodos = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/todos');
+      const res = await fetch('/api/todos', {
+        credentials: 'include', // Required for cookies to work on iOS
+      });
       if (!res.ok) throw new Error('Failed to fetch todos');
       const data = await res.json();
       setTodos(data.todos);
@@ -35,7 +37,10 @@ export function useTodos() {
 
   const toggleTodo = async (id: string) => {
     try {
-      const res = await fetch(`/api/todos/${id}/toggle`, { method: 'POST' });
+      const res = await fetch(`/api/todos/${id}/toggle`, { 
+        method: 'POST',
+        credentials: 'include', // Required for cookies to work on iOS
+      });
       if (!res.ok) throw new Error('Failed to toggle todo');
       await fetchTodos(); // Refresh
     } catch (err: any) {
@@ -48,6 +53,7 @@ export function useTodos() {
       const res = await fetch('/api/todos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Required for cookies to work on iOS
         body: JSON.stringify({ text, assignedTo }),
       });
       if (!res.ok) throw new Error('Failed to create todo');

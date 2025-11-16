@@ -30,7 +30,9 @@ export function useStats() {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/stats');
+      const res = await fetch('/api/stats', {
+        credentials: 'include', // Required for cookies to work on iOS
+      });
       if (!res.ok) throw new Error('Failed to fetch stats');
       const data = await res.json();
       setStats(data);
