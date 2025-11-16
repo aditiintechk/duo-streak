@@ -91,7 +91,7 @@ export default function TodoPage() {
 					</div>
 					<div className='h-2 overflow-hidden rounded-full bg-(--border)'>
 						<div
-							className='h-full rounded-full bg-gradient-to-r from-(--accent) to-(--partner-color) transition-all'
+							className='h-full rounded-full bg-linear-to-r from-(--accent) to-(--partner-color) transition-all'
 							style={{
 								width: `${
 									(completedCount / totalCount) * 100
