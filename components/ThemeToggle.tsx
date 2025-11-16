@@ -42,7 +42,7 @@ export default function ThemeToggle() {
           localStorage.setItem('theme', 'light');
         }
       }}
-      className="fixed right-3 top-3 z-50 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--card-bg)] border border-[var(--border)] text-[var(--foreground)] shadow-sm transition-all hover:bg-[var(--border)] hover:scale-105 sm:right-6 sm:top-6"
+      className="fixed right-3 top-3 z-50 flex h-8 w-8 items-center justify-center rounded-full bg-(--card-bg) border border-(--border) text-(--foreground) shadow-sm transition-all hover:bg-(--border) hover:scale-105 sm:right-6 sm:top-6"
       aria-label="Toggle theme"
     >
       <span className="text-sm">{isDark ? '☀️' : '🌙'}</span>

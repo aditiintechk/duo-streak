@@ -1,101 +1,137 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import ProgressChart from '@/components/ProgressChart';
+import { useStats } from '@/hooks/useStats';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function StatsPage() {
-  // Mock data for charts
-  const weeklyData = [
-    { day: 'Mon', you: 5, partner: 4 },
-    { day: 'Tue', you: 6, partner: 5 },
-    { day: 'Wed', you: 4, partner: 6 },
-    { day: 'Thu', you: 7, partner: 5 },
-    { day: 'Fri', you: 5, partner: 7 },
-    { day: 'Sat', you: 6, partner: 6 },
-    { day: 'Sun', you: 4, partner: 5 },
-  ];
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const { stats, loading } = useStats();
 
-  const habitCompletion = [
-    { name: 'Completed', value: 75, color: 'var(--success)' },
-    { name: 'Pending', value: 25, color: 'var(--text-secondary)' },
-  ];
+  // Redirect to login if not authenticated (in useEffect to avoid render issues)
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [authLoading, user, router]);
 
-  const sharedStreaks = [
-    { habit: 'Morning Meditation', streak: 12, owner: 'both' },
-    { habit: 'Evening Walk', streak: 8, owner: 'both' },
-    { habit: 'Read Together', streak: 15, owner: 'both' },
-  ];
+  // Show loading state while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-(--background) pb-16 sm:pb-0 sm:pt-14 flex items-center justify-center">
+        <p className="text-sm text-(--text-secondary)">Loading...</p>
+      </div>
+    );
+  }
+
+  // Show nothing if not authenticated (redirect is happening)
+  if (!user) {
+    return null;
+  }
+
+  if (loading || !stats) {
+    return (
+      <div className="min-h-screen bg-(--background) pb-16 sm:pb-0 sm:pt-14">
+        <Navigation />
+        <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-(--foreground)">Stats</h1>
+          </div>
+          <div className="rounded-xl border border-(--border) bg-(--card-bg) p-8 text-center">
+            <p className="text-sm text-(--text-secondary)">Loading stats...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const maxSharedStreak =
+    stats.sharedStreaks.length > 0
+      ? Math.max(...stats.sharedStreaks.map((s) => s.streak))
+      : 0;
 
   return (
-    <div className="min-h-screen bg-[var(--background)] pb-16 sm:pb-0 sm:pt-14">
+    <div className="min-h-screen bg-(--background) pb-16 sm:pb-0 sm:pt-14">
       <Navigation />
       
       <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">Stats</h1>
+          <h1 className="text-2xl font-bold text-(--foreground)">Stats</h1>
         </div>
 
         {/* Stats Cards */}
         <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="rounded-xl bg-[var(--card-bg)] p-4 border border-[var(--border)]">
-            <p className="mb-1 text-xs text-[var(--text-secondary)]">Your Completion Rate</p>
-            <p className="text-2xl font-bold text-[var(--accent)]">82%</p>
-            <p className="mt-1 text-xs text-[var(--text-secondary)]">↑ 5% from last week</p>
+          <div className="rounded-xl bg-(--card-bg) p-4 border border-(--border)">
+            <p className="mb-1 text-xs text-(--text-secondary)">Your Completion Rate</p>
+            <p className="text-2xl font-bold text-(--accent)">{stats.yourRate}%</p>
+            <p className="mt-1 text-xs text-(--text-secondary)">Today's completion</p>
           </div>
-          <div className="rounded-xl bg-[var(--card-bg)] p-4 border border-[var(--border)]">
-            <p className="mb-1 text-xs text-[var(--text-secondary)]">Partner's Rate</p>
-            <p className="text-2xl font-bold text-[var(--partner-color)]">78%</p>
-            <p className="mt-1 text-xs text-[var(--text-secondary)]">↑ 3% from last week</p>
+          <div className="rounded-xl bg-(--card-bg) p-4 border border-(--border)">
+            <p className="mb-1 text-xs text-(--text-secondary)">Partner's Rate</p>
+            <p className="text-2xl font-bold text-(--partner-color)">{stats.partnerRate}%</p>
+            <p className="mt-1 text-xs text-(--text-secondary)">Today's completion</p>
           </div>
-          <div className="rounded-xl bg-[var(--card-bg)] p-4 border border-[var(--border)]">
-            <p className="mb-1 text-xs text-[var(--text-secondary)]">Shared Streak</p>
-            <p className="text-2xl font-bold text-[var(--foreground)]">15 days</p>
-            <p className="mt-1 text-xs text-[var(--text-secondary)]">Keep it up! 🔥</p>
+          <div className="rounded-xl bg-(--card-bg) p-4 border border-(--border)">
+            <p className="mb-1 text-xs text-(--text-secondary)">Shared Streak</p>
+            <p className="text-2xl font-bold text-(--foreground)">{maxSharedStreak} days</p>
+            <p className="mt-1 text-xs text-(--text-secondary)">
+              {maxSharedStreak > 0 ? 'Keep it up! 🔥' : 'No shared streaks yet'}
+            </p>
           </div>
         </div>
 
         {/* Weekly Progress Chart */}
-        <div className="mb-4 rounded-xl bg-[var(--card-bg)] p-4 border border-[var(--border)]">
-          <h2 className="mb-3 text-lg font-semibold text-[var(--foreground)]">Weekly Progress</h2>
+        <div className="mb-4 rounded-xl bg-(--card-bg) p-4 border border-(--border)">
+          <h2 className="mb-3 text-lg font-semibold text-(--foreground)">Weekly Progress</h2>
           <div className="mb-3 flex items-center gap-3">
             <div className="flex items-center gap-1.5">
-              <div className="h-2.5 w-2.5 rounded-full bg-[var(--accent)]" />
-              <span className="text-xs text-[var(--text-secondary)]">You</span>
+              <div className="h-2.5 w-2.5 rounded-full bg-(--accent)" />
+              <span className="text-xs text-(--text-secondary)">You</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="h-2.5 w-2.5 rounded-full bg-[var(--partner-color)]" />
-              <span className="text-xs text-[var(--text-secondary)]">Partner</span>
+              <div className="h-2.5 w-2.5 rounded-full bg-(--partner-color)" />
+              <span className="text-xs text-(--text-secondary)">Partner</span>
             </div>
           </div>
-          <ProgressChart data={weeklyData} type="bar" />
+          <ProgressChart data={stats.weeklyData} type="bar" />
         </div>
 
         {/* Shared Streaks */}
-        <div className="mb-4 rounded-xl bg-[var(--card-bg)] p-4 border border-[var(--border)]">
-          <h2 className="mb-3 text-lg font-semibold text-[var(--foreground)]">Top Shared Streaks</h2>
+        <div className="mb-4 rounded-xl bg-(--card-bg) p-4 border border-(--border)">
+          <h2 className="mb-3 text-lg font-semibold text-(--foreground)">Top Shared Streaks</h2>
           <div className="space-y-2">
-            {sharedStreaks.map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between rounded-lg bg-[var(--background)] p-3"
-              >
-                <div>
-                  <p className="text-sm font-medium text-[var(--foreground)]">{item.habit}</p>
-                  <p className="text-xs text-[var(--text-secondary)]">Shared habit</p>
+            {stats.sharedStreaks.length > 0 ? (
+              stats.sharedStreaks.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between rounded-lg bg-(--background) p-3"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-(--foreground)">{item.habit}</p>
+                    <p className="text-xs text-(--text-secondary)">Shared habit</p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-lg">🔥</span>
+                    <span className="text-lg font-bold text-(--accent)">{item.streak}</span>
+                    <span className="text-xs text-(--text-secondary)">days</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-lg">🔥</span>
-                  <span className="text-lg font-bold text-[var(--accent)]">{item.streak}</span>
-                  <span className="text-xs text-[var(--text-secondary)]">days</span>
-                </div>
+              ))
+            ) : (
+              <div className="rounded-lg bg-(--background) p-3 text-center">
+                <p className="text-sm text-(--text-secondary)">No shared streaks yet</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
         {/* Completion Pie Chart (simplified) */}
-        <div className="rounded-xl bg-[var(--card-bg)] p-4 border border-[var(--border)]">
-          <h2 className="mb-3 text-lg font-semibold text-[var(--foreground)]">This Week's Completion</h2>
+        <div className="rounded-xl bg-(--card-bg) p-4 border border-(--border)">
+          <h2 className="mb-3 text-lg font-semibold text-(--foreground)">This Week's Completion</h2>
           <div className="flex items-center justify-center gap-6">
             <div className="relative h-24 w-24">
               <svg className="h-24 w-24 -rotate-90 transform">
@@ -115,22 +151,22 @@ export default function StatsPage() {
                   stroke="var(--success)"
                   strokeWidth="12"
                   strokeDasharray={`${2 * Math.PI * 42}`}
-                  strokeDashoffset={`${2 * Math.PI * 42 * (1 - 0.75)}`}
+                  strokeDashoffset={`${2 * Math.PI * 42 * (1 - stats.weekCompletion / 100)}`}
                   className="transition-all"
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-bold text-[var(--foreground)]">75%</span>
+                <span className="text-lg font-bold text-(--foreground)">{stats.weekCompletion}%</span>
               </div>
             </div>
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
-                <div className="h-3 w-3 rounded-full bg-[var(--success)]" />
-                <span className="text-xs text-[var(--text-secondary)]">Completed</span>
+                <div className="h-3 w-3 rounded-full bg-(--success)" />
+                <span className="text-xs text-(--text-secondary)">Completed</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="h-3 w-3 rounded-full bg-[var(--border)]" />
-                <span className="text-xs text-[var(--text-secondary)]">Pending</span>
+                <div className="h-3 w-3 rounded-full bg-(--border)" />
+                <span className="text-xs text-(--text-secondary)">Pending</span>
               </div>
             </div>
           </div>

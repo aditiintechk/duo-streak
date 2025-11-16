@@ -1,6 +1,8 @@
 'use client';
 
-import { Check, Flame } from 'lucide-react';
+import { useState } from 'react';
+import { Check, Flame, Bell, Trash2 } from 'lucide-react';
+import ConfirmModal from './ConfirmModal';
 
 interface HabitCardProps {
   title: string;
@@ -8,13 +10,20 @@ interface HabitCardProps {
   completed: boolean;
   owner: 'me' | 'partner' | 'shared';
   onToggle: () => void;
+  onNudge?: () => void;
+  onDelete?: () => void;
+  sharedCompletion?: {
+    user: boolean;
+    partner: boolean;
+  };
 }
 
-export default function HabitCard({ title, streak, completed, owner, onToggle }: HabitCardProps) {
+export default function HabitCard({ title, streak, completed, owner, onToggle, onNudge, onDelete, sharedCompletion }: HabitCardProps) {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const ownerColors = {
-    me: 'bg-[var(--accent)]/10 border-[var(--accent)]/20',
-    partner: 'bg-[var(--partner-color)]/10 border-[var(--partner-color)]/20',
-    shared: 'bg-gradient-to-br from-[var(--accent)]/10 to-[var(--partner-color)]/10 border-[var(--accent)]/20',
+    me: 'bg-(--accent)/10 border-(--accent)/20',
+    partner: 'bg-(--partner-color)/10 border-(--partner-color)/20',
+    shared: 'bg-gradient-to-br from-(--accent)/10 to-(--partner-color)/10 border-(--accent)/20',
   };
 
   const ownerLabels = {
@@ -23,46 +32,108 @@ export default function HabitCard({ title, streak, completed, owner, onToggle }:
     shared: 'Shared',
   };
 
+  const isPartnerHabit = owner === 'partner';
+  const isSharedHabit = owner === 'shared';
+  const partnerCompleted = sharedCompletion?.partner ?? false;
+  const userCompleted = sharedCompletion?.user ?? completed;
+
   return (
     <div
       className={`group relative overflow-hidden rounded-xl border-2 p-3 transition-all hover:shadow-lg hover:scale-[1.01] ${ownerColors[owner]} ${
-        completed ? 'opacity-90' : ''
+        (isSharedHabit && sharedCompletion && userCompleted && partnerCompleted) || (!isSharedHabit && userCompleted) ? 'opacity-90' : ''
       }`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1">
-          <div className="mb-1.5 flex items-center gap-1.5">
-            <span className="text-xs font-medium text-[var(--text-secondary)]">
-              {ownerLabels[owner]}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex-1 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-(--foreground)">{title}</h3>
+          {streak > 0 && (
+            <span className="flex items-center gap-1 rounded-full bg-(--accent)/20 px-1.5 py-0.5 text-xs font-semibold text-(--accent)">
+              <Flame className="h-3 w-3" />
+              {streak} day{streak !== 1 ? 's' : ''}
             </span>
-            {streak > 0 && (
-              <span className="flex items-center gap-1 rounded-full bg-[var(--accent)]/20 px-1.5 py-0.5 text-xs font-semibold text-[var(--accent)]">
-                <Flame className="h-3 w-3" />
-                {streak} day{streak !== 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
-          <h3 className="text-sm font-semibold text-[var(--foreground)]">{title}</h3>
+          )}
         </div>
-        <button
-          onClick={onToggle}
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
-            completed
-              ? 'border-[var(--success)] bg-[var(--success)] text-white'
-              : 'border-[var(--border)] bg-[var(--card-bg)] hover:border-[var(--accent)] hover:bg-[var(--accent)]/10'
-          }`}
-        >
-          {completed && <Check className="h-4 w-4" />}
-        </button>
-      </div>
-      
-      {/* Progress ring visualization */}
-      <div className="mt-3 flex items-center gap-2">
-        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--border)]">
-          <div
-            className="h-full rounded-full bg-[var(--accent)] transition-all"
-            style={{ width: completed ? '100%' : '0%' }}
-          />
+        
+        <div className="flex items-center gap-2">
+          {/* For shared habits, show both completion statuses */}
+          {isSharedHabit && sharedCompletion && (
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
+                <div className={`h-2 w-2 rounded-full ${userCompleted ? 'bg-(--accent)' : 'bg-(--border)'}`} />
+                <span className="text-xs text-(--text-secondary)">You</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className={`h-2 w-2 rounded-full ${partnerCompleted ? 'bg-(--partner-color)' : 'bg-(--border)'}`} />
+                <span className="text-xs text-(--text-secondary)">Partner</span>
+              </div>
+            </div>
+          )}
+
+          {/* Show nudge button for partner habits or shared habits when partner hasn't completed */}
+          {isPartnerHabit ? (
+            !completed && onNudge ? (
+              <button
+                onClick={onNudge}
+                className="flex items-center gap-1.5 rounded-lg bg-(--partner-color) px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-(--partner-color)/80 hover:shadow-md"
+              >
+                <Bell className="h-3.5 w-3.5" />
+                Nudge
+              </button>
+            ) : completed ? (
+              <div className="flex items-center gap-1.5 rounded-lg bg-(--success)/10 px-3 py-1.5 text-xs font-medium text-(--success)">
+                <Check className="h-3.5 w-3.5" />
+                Done
+              </div>
+            ) : null
+          ) : isSharedHabit && sharedCompletion && userCompleted && !partnerCompleted && onNudge ? (
+            <button
+              onClick={onNudge}
+              className="flex items-center gap-1.5 rounded-lg bg-(--partner-color) px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-(--partner-color)/80 hover:shadow-md"
+            >
+              <Bell className="h-3.5 w-3.5" />
+              Nudge
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={onToggle}
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-all shadow-sm ${
+                  userCompleted
+                    ? 'border-(--success) bg-(--success) text-white shadow-md'
+                    : 'border-(--accent) bg-(--card-bg) hover:border-(--accent-dark) hover:bg-(--accent)/20 hover:shadow-md'
+                }`}
+              >
+                {userCompleted && <Check className="h-3.5 w-3.5" />}
+              </button>
+              {/* Delete button - only show for non-partner habits */}
+              {onDelete && !isPartnerHabit && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDeleteModal(true);
+                    }}
+                    className="opacity-60 hover:opacity-100 transition-opacity p-2 rounded-lg hover:bg-red-500/10 text-red-500 hover:text-red-600"
+                    aria-label="Delete habit"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                  <ConfirmModal
+                    isOpen={showDeleteModal}
+                    onClose={() => setShowDeleteModal(false)}
+                    onConfirm={() => {
+                      onDelete();
+                    }}
+                    title="Delete Habit"
+                    message={`Are you sure you want to delete "${title}"? This action cannot be undone.`}
+                    confirmText="Delete"
+                    cancelText="Cancel"
+                    confirmColor="red"
+                  />
+                </>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
