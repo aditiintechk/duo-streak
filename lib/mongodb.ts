@@ -27,11 +27,12 @@ async function connectDB() {
   }
 
   if (!cached.promise) {
+    // MONGODB_URI is checked at module level, so it's safe to use non-null assertion
     const opts = {
       bufferCommands: false,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
       return mongoose;
     });
   }

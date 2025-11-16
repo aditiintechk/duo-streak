@@ -1,4 +1,4 @@
-# Shared Habit Tracker
+# DuoStreak
 
 A modern, minimal habit tracking app for couples to build better habits together.
 
@@ -9,6 +9,7 @@ A modern, minimal habit tracking app for couples to build better habits together
 - ✅ Stats and insights
 - ✅ Streak tracking
 - ✅ Dark/Light mode
+- ✅ Progressive Web App (PWA) - Install on mobile/desktop
 
 ## Tech Stack
 
@@ -35,6 +36,12 @@ npm install
 ```env
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/habit-tracker?retryWrites=true&w=majority
 JWT_SECRET=your-super-secret-jwt-key-here-change-this-in-production
+
+# Push Notifications (VAPID Keys)
+# Generate these keys by running: node scripts/generate-vapid-keys.js
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=your-vapid-public-key
+VAPID_PRIVATE_KEY=your-vapid-private-key
+VAPID_EMAIL=mailto:your-email@example.com
 ```
 
 **Generate JWT Secret:**
@@ -42,13 +49,41 @@ JWT_SECRET=your-super-secret-jwt-key-here-change-this-in-production
 openssl rand -base64 32
 ```
 
-### 3. Run the Development Server
+**Generate VAPID Keys for Push Notifications:**
+```bash
+node scripts/generate-vapid-keys.js
+```
+Copy the output to your `.env.local` file.
+
+### 3. Set Up PWA Icons (Optional but Recommended)
+
+For the PWA to work properly, you need to add icon files:
+
+1. Create two PNG icons:
+   - `icon-192x192.png` (192x192 pixels)
+   - `icon-512x512.png` (512x512 pixels)
+
+2. Place them in the `/public` folder
+
+**Quick Options:**
+- Use [PWA Builder Image Generator](https://www.pwabuilder.com/imageGenerator)
+- Use [RealFaviconGenerator](https://realfavicongenerator.net/)
+- Create simple icons with your brand color (#f97316)
+
+See `public/icon-generator.md` for more details.
+
+### 4. Run the Development Server
 
 ```bash
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+**Note:** PWA features are disabled in development mode. To test PWA:
+1. Build the app: `npm run build`
+2. Start production server: `npm start`
+3. Visit the site and use browser's "Install" option
 
 ## API Endpoints
 
@@ -143,6 +178,34 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - **HabitCompletion**: habitId, userId, date, completed
 - **Todo**: text, userId, assignedTo, completed
 
+## PWA (Progressive Web App)
+
+This app is configured as a PWA and can be installed on mobile devices and desktops.
+
+### Features:
+- ✅ Offline support (via service worker)
+- ✅ Installable on mobile/desktop
+- ✅ App-like experience
+- ✅ Fast loading with caching
+
+### To Install:
+1. **On Mobile (Android/iPhone):**
+   - Open the app in your browser
+   - Tap the browser menu (three dots)
+   - Select "Add to Home Screen" or "Install App"
+
+2. **On Desktop (Chrome/Edge):**
+   - Look for the install icon in the address bar
+   - Click "Install" when prompted
+
+### Testing PWA:
+PWA is disabled in development. To test:
+```bash
+npm run build
+npm start
+```
+Then visit the site and check for install prompts.
+
 ## Next Steps (Future Enhancements)
 
 - [ ] Partner linking functionality
@@ -150,5 +213,5 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - [ ] Habit editing and deletion
 - [ ] Todo editing and deletion
 - [ ] Email notifications
-- [ ] Mobile app
+- [ ] Push notifications
 - [ ] Deploy to production

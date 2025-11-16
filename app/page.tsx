@@ -8,6 +8,7 @@ import HabitCard from '@/components/HabitCard'
 import CustomSelect from '@/components/CustomSelect'
 import { useHabits } from '@/hooks/useHabits'
 import { useAuth } from '@/contexts/AuthContext'
+import { useNotifications } from '@/hooks/useNotifications'
 
 type TabType = 'my' | 'partner' | 'shared'
 
@@ -16,10 +17,12 @@ export default function Home() {
 	const { user, loading: authLoading } = useAuth()
 	const [activeTab, setActiveTab] = useState<TabType>('my')
 	const { habits, loading, toggleHabit, createHabit, deleteHabit } = useHabits(activeTab)
+	const { sendNudge, isSubscribed, subscribeToNotifications } = useNotifications()
 	const [showAddModal, setShowAddModal] = useState(false)
 	const [newHabitTitle, setNewHabitTitle] = useState('')
 	const [newHabitOwner, setNewHabitOwner] = useState<'me' | 'shared'>('me')
 	const [isCreating, setIsCreating] = useState(false)
+	const [nudging, setNudging] = useState<string | null>(null)
 
 	// Redirect to login if not authenticated (in useEffect to avoid render issues)
 	useEffect(() => {
@@ -121,9 +124,30 @@ export default function Home() {
 									onNudge={
 										(habit.owner === 'partner' && !habit.completed) ||
 										(habit.owner === 'shared' && habit.sharedCompletion && habit.sharedCompletion.user && !habit.sharedCompletion.partner)
-											? () => {
-													// TODO: Implement nudge notification
-													console.log('Nudging partner for:', habit.title);
+											? async () => {
+													if (!isSubscribed) {
+														const subscribed = await subscribeToNotifications();
+														if (!subscribed) {
+															alert('Please enable notifications to send nudges');
+															return;
+														}
+													}
+													
+													setNudging(habit.id);
+													try {
+														const success = await sendNudge(habit.id, habit.title);
+														if (success) {
+															// Show success feedback
+															console.log('Nudge sent successfully');
+														} else {
+															alert('Failed to send nudge. Make sure your partner has enabled notifications.');
+														}
+													} catch (error) {
+														console.error('Error sending nudge:', error);
+														alert('Failed to send nudge');
+													} finally {
+														setNudging(null);
+													}
 												}
 											: undefined
 									}

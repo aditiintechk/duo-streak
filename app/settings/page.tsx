@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, Bell } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNotifications } from '@/hooks/useNotifications';
 
 export default function SettingsPage() {
   const router = useRouter();
   const { user, loading: authLoading, logout, refreshUser } = useAuth();
+  const { isSupported, permission, isSubscribed, subscribeToNotifications } = useNotifications();
   const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [partnerInfo, setPartnerInfo] = useState<{ name: string; email: string } | null>(null);
@@ -17,6 +19,7 @@ export default function SettingsPage() {
   const [isLinking, setIsLinking] = useState(false);
   const [linkError, setLinkError] = useState('');
   const [loadingPartner, setLoadingPartner] = useState(true);
+  const [enablingNotifications, setEnablingNotifications] = useState(false);
 
   // Redirect to login if not authenticated (in useEffect to avoid render issues)
   useEffect(() => {
@@ -250,6 +253,60 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Notifications Section */}
+        {isSupported && (
+          <div className="mb-4 rounded-xl bg-(--card-bg) p-4 border border-(--border)">
+            <h2 className="mb-3 text-lg font-semibold text-(--foreground)">Notifications</h2>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-(--foreground) mb-0.5">Push Notifications</p>
+                  <p className="text-xs text-(--text-secondary)">
+                    {isSubscribed
+                      ? 'Enabled - You can receive nudges from your partner'
+                      : permission === 'denied'
+                      ? 'Blocked - Enable in browser settings'
+                      : 'Disabled - Enable to receive nudges'}
+                  </p>
+                </div>
+                {!isSubscribed && permission !== 'denied' && (
+                  <button
+                    onClick={async () => {
+                      setEnablingNotifications(true);
+                      try {
+                        console.log('Starting notification subscription...');
+                        const success = await subscribeToNotifications();
+                        if (success) {
+                          alert('Notifications enabled! You can now receive nudges from your partner.');
+                          // State will update automatically via useNotifications hook
+                        } else {
+                          alert('Failed to enable notifications. Please check the browser console for errors and make sure you\'ve built the app with "npm run build".');
+                        }
+                      } catch (error: any) {
+                        console.error('Error enabling notifications:', error);
+                        alert(`Failed to enable notifications: ${error.message || 'Unknown error'}. Check the browser console for details.`);
+                      } finally {
+                        setEnablingNotifications(false);
+                      }
+                    }}
+                    disabled={enablingNotifications}
+                    className="flex items-center gap-1.5 rounded-lg bg-(--accent) px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-(--accent-dark) hover:shadow-md disabled:opacity-50"
+                  >
+                    <Bell className="h-3.5 w-3.5" />
+                    {enablingNotifications ? 'Enabling...' : 'Enable'}
+                  </button>
+                )}
+                {isSubscribed && (
+                  <div className="flex items-center gap-1.5 rounded-lg bg-(--success)/10 px-3 py-1.5 text-xs font-medium text-(--success)">
+                    <Bell className="h-3.5 w-3.5" />
+                    Enabled
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Account Actions */}
         <div className="mb-4 rounded-xl bg-(--card-bg) p-4 border border-(--border)">
           <h2 className="mb-3 text-lg font-semibold text-(--foreground)">Account</h2>
@@ -277,7 +334,7 @@ export default function SettingsPage() {
         <div className="rounded-xl bg-(--card-bg) p-4 border border-(--border)">
           <h2 className="mb-3 text-lg font-semibold text-(--foreground)">About</h2>
           <div className="space-y-2 text-xs text-(--text-secondary)">
-            <p>Shared Habit Tracker v1.0.0</p>
+            <p>DuoStreak v1.0.0</p>
             <p>Build better habits together with your partner</p>
           </div>
         </div>

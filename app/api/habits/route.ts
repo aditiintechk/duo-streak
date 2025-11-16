@@ -27,8 +27,11 @@ export async function GET(req: NextRequest) {
     // Build query based on filter
     let query: any = {};
     if (filter === 'partner' && partnerId) {
-      // Show habits created by the partner
-      query = { userId: partnerId };
+      // Show only partner's personal habits (exclude shared habits)
+      query = { 
+        userId: partnerId,
+        owner: { $ne: 'shared' } // Exclude shared habits
+      };
     } else if (filter === 'shared') {
       // Show shared habits where user or partner is involved
       query = {

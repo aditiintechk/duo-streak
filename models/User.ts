@@ -5,6 +5,13 @@ export interface IUser extends Document {
   password: string;
   name: string;
   partnerId?: mongoose.Types.ObjectId;
+  notificationSubscription?: {
+    endpoint: string;
+    keys: {
+      p256dh: string;
+      auth: string;
+    };
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,6 +38,13 @@ const UserSchema = new Schema<IUser>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       default: null,
+    },
+    notificationSubscription: {
+      endpoint: String,
+      keys: {
+        p256dh: String,
+        auth: String,
+      },
     },
   },
   {

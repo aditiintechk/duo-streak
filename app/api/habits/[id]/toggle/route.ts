@@ -34,17 +34,21 @@ export async function POST(
     const user = await User.findById(userId);
     const partnerId = user?.partnerId?.toString();
     const habitPartnerId = habit.partnerId?.toString();
+    const habitCreatorId = habit.userId.toString();
 
-    const isOwner = habit.userId.toString() === userId;
+    const isOwner = habitCreatorId === userId;
     const isShared = habit.owner === 'shared';
     
-    // For shared habits, both creator and partner can toggle
+    // For shared habits, both creator and their partner can toggle
     if (isShared) {
-      const isCreator = habit.userId.toString() === userId;
-      const isPartner = habitPartnerId === userId;
-      if (!isCreator && !isPartner) {
+      const isCreator = habitCreatorId === userId;
+      // Partner can toggle if: they are the creator's partner OR the habit's partnerId matches them
+      const isCreatorPartner = partnerId === habitCreatorId; // Current user's partner is the creator
+      const isHabitPartner = habitPartnerId === userId; // Habit's partnerId matches current user
+      
+      if (!isCreator && !isCreatorPartner && !isHabitPartner) {
         return NextResponse.json(
-          { error: 'Unauthorized' },
+          { error: 'Unauthorized - Only the creator or their partner can toggle shared habits' },
           { status: 403 }
         );
       }
