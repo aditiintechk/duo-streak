@@ -5,7 +5,7 @@ A modern, minimal habit tracking app for couples to build better habits together
 ## Features
 
 - ✅ Track personal and shared habits
-- ✅ Shared todo list
+- ✅ Together todo list
 - ✅ Stats and insights
 - ✅ Streak tracking
 - ✅ Dark/Light mode
@@ -151,7 +151,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - Protected routes
 
 ✅ **Habits**
-- Create habits (My/Partner/Shared)
+- Create habits (My/Partner/Together)
 - Toggle daily completion
 - Streak tracking
 - Filter by owner
@@ -164,7 +164,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ✅ **Stats**
 - Weekly progress charts
 - Completion rates
-- Shared streak tracking
+- Together streak tracking
 
 ✅ **Settings**
 - Profile management

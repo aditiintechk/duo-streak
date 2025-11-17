@@ -24,7 +24,7 @@ export default function TodoItem({ text, completed, assignedTo, onToggle, onDele
   const tagLabels = {
     me: 'Mine',
     partner: "Partner's",
-    both: 'Shared',
+    both: 'Together',
   };
 
   const tagColors = {

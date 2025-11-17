@@ -1,4 +1,4 @@
-# Shared Habit Tracker & Todo List - Architecture & Tech Stack
+# Together Habit Tracker & Todo List - Architecture & Tech Stack
 
 ## 🎯 Overview
 
@@ -55,129 +55,151 @@ A scalable, real-time collaborative habit tracker and todo list application buil
 ## 🛠️ Tech Stack Recommendations
 
 ### **Core Framework**
-- **Next.js 16+** (App Router) - Server components, RSC, streaming
-- **TypeScript** - Type safety at scale
-- **React 19** - Latest features, concurrent rendering
+
+-   **Next.js 16+** (App Router) - Server components, RSC, streaming
+-   **TypeScript** - Type safety at scale
+-   **React 19** - Latest features, concurrent rendering
 
 ### **Styling & UI**
-- **Tailwind CSS 4** - Utility-first, JIT compilation
-- **shadcn/ui** - Accessible, customizable components
-- **Framer Motion** - Smooth animations
-- **Radix UI** - Headless UI primitives
+
+-   **Tailwind CSS 4** - Utility-first, JIT compilation
+-   **shadcn/ui** - Accessible, customizable components
+-   **Framer Motion** - Smooth animations
+-   **Radix UI** - Headless UI primitives
 
 ### **Database & ORM**
+
 **Option 1: Supabase (Recommended for MVP → Scale)**
-- PostgreSQL with real-time subscriptions built-in
-- Row-level security (RLS) for multi-tenancy
-- Built-in auth, storage, edge functions
-- Auto-scaling, managed infrastructure
+
+-   PostgreSQL with real-time subscriptions built-in
+-   Row-level security (RLS) for multi-tenancy
+-   Built-in auth, storage, edge functions
+-   Auto-scaling, managed infrastructure
 
 **Option 2: Neon + Prisma (More Control)**
-- Serverless PostgreSQL (Neon)
-- Prisma ORM - type-safe, migrations, query builder
-- Better for complex queries and custom logic
+
+-   Serverless PostgreSQL (Neon)
+-   Prisma ORM - type-safe, migrations, query builder
+-   Better for complex queries and custom logic
 
 **Option 3: Vercel Postgres + Drizzle (Edge-Ready)**
-- Edge-compatible queries
-- Drizzle ORM - lightweight, SQL-like
-- Perfect for Vercel deployment
+
+-   Edge-compatible queries
+-   Drizzle ORM - lightweight, SQL-like
+-   Perfect for Vercel deployment
 
 ### **Real-Time Communication**
+
 **Option 1: Supabase Realtime (If using Supabase)**
-- Built-in PostgreSQL change streams
-- WebSocket connections
-- Free tier generous
+
+-   Built-in PostgreSQL change streams
+-   WebSocket connections
+-   Free tier generous
 
 **Option 2: Ably**
-- Enterprise-grade pub/sub
-- Presence, channels, history
-- Great for high-scale real-time
+
+-   Enterprise-grade pub/sub
+-   Presence, channels, history
+-   Great for high-scale real-time
 
 **Option 3: Pusher**
-- Simple WebSocket API
-- Good documentation
-- Moderate pricing
+
+-   Simple WebSocket API
+-   Good documentation
+-   Moderate pricing
 
 **Option 4: Server-Sent Events (SSE)**
-- Simpler than WebSockets
-- One-way server → client
-- Good for notifications
+
+-   Simpler than WebSockets
+-   One-way server → client
+-   Good for notifications
 
 ### **Authentication & Authorization**
-- **NextAuth.js v5 (Auth.js)** - OAuth, email, magic links
-- **Clerk** - Pre-built UI, social logins, user management
-- **Supabase Auth** - If using Supabase
-- **Row-Level Security (RLS)** - Database-level permissions
+
+-   **NextAuth.js v5 (Auth.js)** - OAuth, email, magic links
+-   **Clerk** - Pre-built UI, social logins, user management
+-   **Supabase Auth** - If using Supabase
+-   **Row-Level Security (RLS)** - Database-level permissions
 
 ### **State Management**
-- **Zustand** - Lightweight, simple API
-- **TanStack Query (React Query)** - Server state, caching, sync
-- **Jotai** - Atomic state (for complex shared state)
+
+-   **Zustand** - Lightweight, simple API
+-   **TanStack Query (React Query)** - Server state, caching, sync
+-   **Jotai** - Atomic state (for complex shared state)
 
 ### **Caching & Performance**
-- **Vercel KV (Redis)** - Edge caching, sessions
-- **React Server Components** - Reduce client bundle
-- **Next.js Image Optimization** - Automatic optimization
-- **SWR/React Query** - Client-side caching
+
+-   **Vercel KV (Redis)** - Edge caching, sessions
+-   **React Server Components** - Reduce client bundle
+-   **Next.js Image Optimization** - Automatic optimization
+-   **SWR/React Query** - Client-side caching
 
 ### **API Layer**
-- **tRPC** (Optional) - End-to-end type safety
-- **Zod** - Runtime validation, schema definition
-- **Server Actions** - Direct mutations from client
+
+-   **tRPC** (Optional) - End-to-end type safety
+-   **Zod** - Runtime validation, schema definition
+-   **Server Actions** - Direct mutations from client
 
 ### **Testing**
-- **Vitest** - Fast unit tests
-- **Playwright** - E2E testing
-- **React Testing Library** - Component tests
+
+-   **Vitest** - Fast unit tests
+-   **Playwright** - E2E testing
+-   **React Testing Library** - Component tests
 
 ### **Monitoring & Analytics**
-- **Vercel Analytics** - Web vitals, performance
-- **Sentry** - Error tracking
-- **PostHog** - Product analytics (optional)
+
+-   **Vercel Analytics** - Web vitals, performance
+-   **Sentry** - Error tracking
+-   **PostHog** - Product analytics (optional)
 
 ### **Deployment**
-- **Vercel** - Optimal for Next.js, edge functions, auto-scaling
-- **Docker + Kubernetes** - For self-hosting at scale
+
+-   **Vercel** - Optimal for Next.js, edge functions, auto-scaling
+-   **Docker + Kubernetes** - For self-hosting at scale
 
 ---
 
 ## 📊 Data Flow & User Journey
 
 ### **1. User Registration/Login**
+
 ```
-User → NextAuth/Clerk → JWT Token → 
-Store in httpOnly cookie → 
-Middleware validates → 
+User → NextAuth/Clerk → JWT Token →
+Store in httpOnly cookie →
+Middleware validates →
 Access granted
 ```
 
-### **2. Creating a Shared Group**
+### **2. Creating a Together Group**
+
 ```
-User creates group → 
-Server Action → 
-Database insert (Group + Membership) → 
-Return group ID → 
+User creates group →
+Server Action →
+Database insert (Group + Membership) →
+Return group ID →
 Redirect to /groups/[id]
 ```
 
 ### **3. Real-Time Updates**
+
 ```
-User A completes habit → 
-Server Action → 
-Database update → 
-Trigger real-time event → 
-All connected clients receive update → 
+User A completes habit →
+Server Action →
+Database update →
+Trigger real-time event →
+All connected clients receive update →
 UI updates automatically
 ```
 
 ### **4. Todo List Collaboration**
+
 ```
-User A adds todo → 
-Optimistic update (UI) → 
-Server Action → 
-Database insert → 
-Real-time broadcast → 
-Other users see new todo → 
+User A adds todo →
+Optimistic update (UI) →
+Server Action →
+Database insert →
+Real-time broadcast →
+Other users see new todo →
 If conflict, server state wins
 ```
 
@@ -280,6 +302,7 @@ notifications (
 ```
 
 ### **Indexes for Performance**
+
 ```sql
 CREATE INDEX idx_habit_completions_user_date ON habit_completions(user_id, DATE(completed_at));
 CREATE INDEX idx_todos_group_completed ON todos(group_id, completed);
@@ -307,26 +330,26 @@ CREATE INDEX idx_notifications_user_read ON notifications(user_id, read);
 import { useRealtimeSubscription } from '@/hooks/useRealtime'
 
 export function HabitList({ groupId }: { groupId: string }) {
-  const { habits, completeHabit } = useHabits(groupId)
-  
-  // Subscribe to real-time updates
-  useRealtimeSubscription(`group:${groupId}:habits`, (event) => {
-    // Update local state when others complete habits
-    updateHabitsFromEvent(event)
-  })
-  
-  const handleComplete = async (habitId: string) => {
-    // Optimistic update
-    completeHabitOptimistic(habitId)
-    
-    try {
-      // Server action
-      await completeHabitAction(habitId)
-    } catch (error) {
-      // Rollback on error
-      revertOptimisticUpdate(habitId)
-    }
-  }
+	const { habits, completeHabit } = useHabits(groupId)
+
+	// Subscribe to real-time updates
+	useRealtimeSubscription(`group:${groupId}:habits`, (event) => {
+		// Update local state when others complete habits
+		updateHabitsFromEvent(event)
+	})
+
+	const handleComplete = async (habitId: string) => {
+		// Optimistic update
+		completeHabitOptimistic(habitId)
+
+		try {
+			// Server action
+			await completeHabitAction(habitId)
+		} catch (error) {
+			// Rollback on error
+			revertOptimisticUpdate(habitId)
+		}
+	}
 }
 ```
 
@@ -344,7 +367,7 @@ CREATE POLICY "Users see own groups"
 ON groups FOR SELECT
 USING (
   id IN (
-    SELECT group_id FROM group_members 
+    SELECT group_id FROM group_members
     WHERE user_id = auth.uid()
   )
 );
@@ -354,7 +377,7 @@ CREATE POLICY "Members can create habits"
 ON habits FOR INSERT
 WITH CHECK (
   group_id IN (
-    SELECT group_id FROM group_members 
+    SELECT group_id FROM group_members
     WHERE user_id = auth.uid()
   )
 );
@@ -365,13 +388,13 @@ WITH CHECK (
 ```typescript
 // middleware.ts
 export async function middleware(request: NextRequest) {
-  const session = await getServerSession()
-  
-  if (!session && request.nextUrl.pathname.startsWith('/app')) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-  
-  return NextResponse.next()
+	const session = await getServerSession()
+
+	if (!session && request.nextUrl.pathname.startsWith('/app')) {
+		return NextResponse.redirect(new URL('/login', request.url))
+	}
+
+	return NextResponse.next()
 }
 ```
 
@@ -380,27 +403,31 @@ export async function middleware(request: NextRequest) {
 ## 📈 Scalability Considerations
 
 ### **Phase 1: MVP (0-1K users)**
-- Single database instance
-- Basic real-time (Supabase Realtime)
-- Server Actions + API Routes
-- Vercel deployment
+
+-   Single database instance
+-   Basic real-time (Supabase Realtime)
+-   Server Actions + API Routes
+-   Vercel deployment
 
 ### **Phase 2: Growth (1K-100K users)**
-- Database read replicas
-- Redis caching layer
-- CDN for static assets
-- Rate limiting
-- Database connection pooling
+
+-   Database read replicas
+-   Redis caching layer
+-   CDN for static assets
+-   Rate limiting
+-   Database connection pooling
 
 ### **Phase 3: Scale (100K+ users)**
-- Database sharding (by group_id)
-- Message queue (RabbitMQ/Kafka) for async tasks
-- Microservices for heavy operations
-- Edge caching (Cloudflare/Vercel Edge)
-- Load balancing
-- Monitoring & alerting
+
+-   Database sharding (by group_id)
+-   Message queue (RabbitMQ/Kafka) for async tasks
+-   Microservices for heavy operations
+-   Edge caching (Cloudflare/Vercel Edge)
+-   Load balancing
+-   Monitoring & alerting
 
 ### **Performance Optimizations**
+
 1. **Pagination** - Limit queries (e.g., 50 items per page)
 2. **Infinite scroll** - Load more on scroll
 3. **Debouncing** - For search/autocomplete
@@ -460,33 +487,37 @@ habit-tracker/
 ## 🎨 Feature Set (MVP → Full)
 
 ### **MVP (Week 1-2)**
-- ✅ User authentication
-- ✅ Create/join groups
-- ✅ Add habits to groups
-- ✅ Mark habits complete (daily)
-- ✅ Basic todo list
-- ✅ Real-time updates
+
+-   ✅ User authentication
+-   ✅ Create/join groups
+-   ✅ Add habits to groups
+-   ✅ Mark habits complete (daily)
+-   ✅ Basic todo list
+-   ✅ Real-time updates
 
 ### **V1 (Month 1)**
-- 📊 Habit streak tracking
-- 📈 Statistics dashboard
-- 🔔 Notifications
-- 👥 User profiles
-- 🎨 Customization (colors, icons)
+
+-   📊 Habit streak tracking
+-   📈 Statistics dashboard
+-   🔔 Notifications
+-   👥 User profiles
+-   🎨 Customization (colors, icons)
 
 ### **V2 (Month 2-3)**
-- 📱 Mobile app (React Native)
-- 🔍 Search & filters
-- 📅 Calendar view
-- 🏆 Achievements/badges
-- 💬 Comments on todos
+
+-   📱 Mobile app (React Native)
+-   🔍 Search & filters
+-   📅 Calendar view
+-   🏆 Achievements/badges
+-   💬 Comments on todos
 
 ### **V3 (Scale)**
-- 🤖 AI habit suggestions
-- 📧 Email reminders
-- 📊 Advanced analytics
-- 🔗 Integrations (Google Calendar, etc.)
-- 💰 Premium features
+
+-   🤖 AI habit suggestions
+-   📧 Email reminders
+-   📊 Advanced analytics
+-   🔗 Integrations (Google Calendar, etc.)
+-   💰 Premium features
 
 ---
 
@@ -525,14 +556,12 @@ habit-tracker/
 
 ## 🔗 Recommended Resources
 
-- [Next.js App Router Docs](https://nextjs.org/docs)
-- [Supabase Realtime Guide](https://supabase.com/docs/guides/realtime)
-- [Vercel Postgres](https://vercel.com/docs/storage/vercel-postgres)
-- [tRPC Best Practices](https://trpc.io/docs)
-- [React Server Components](https://react.dev/blog/2023/03/22/react-labs-what-we-have-been-working-on-march-2023)
+-   [Next.js App Router Docs](https://nextjs.org/docs)
+-   [Supabase Realtime Guide](https://supabase.com/docs/guides/realtime)
+-   [Vercel Postgres](https://vercel.com/docs/storage/vercel-postgres)
+-   [tRPC Best Practices](https://trpc.io/docs)
+-   [React Server Components](https://react.dev/blog/2023/03/22/react-labs-what-we-have-been-working-on-march-2023)
 
 ---
 
 **Ready to build? Let's start with the foundation!** 🚀
-
-

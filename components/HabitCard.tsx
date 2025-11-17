@@ -29,7 +29,7 @@ export default function HabitCard({ title, streak, completed, owner, onToggle, o
   const ownerLabels = {
     me: 'You',
     partner: 'Partner',
-    shared: 'Shared',
+    shared: 'Together',
   };
 
   const isPartnerHabit = owner === 'partner';
@@ -44,31 +44,29 @@ export default function HabitCard({ title, streak, completed, owner, onToggle, o
       }`}
     >
       <div className="flex items-center justify-between gap-3">
-        <div className="flex-1 flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-(--foreground)">{title}</h3>
+        <div className="flex-1">
           {streak > 0 && (
-            <span className="flex items-center gap-1 rounded-full bg-(--accent)/20 px-1.5 py-0.5 text-xs font-semibold text-(--accent)">
+            <span className="mb-1 inline-flex items-center gap-1 rounded-full bg-(--accent)/20 px-1.5 py-0.5 text-xs font-semibold text-(--accent)">
               <Flame className="h-3 w-3" />
               {streak} day{streak !== 1 ? 's' : ''}
             </span>
           )}
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {/* For shared habits, show both completion statuses */}
+          <h3 className="text-sm font-semibold text-(--foreground) break-words">{title}</h3>
           {isSharedHabit && sharedCompletion && (
-            <div className="flex items-center gap-1.5">
+            <div className="mt-2 flex items-center gap-3 text-xs text-(--text-secondary)">
               <div className="flex items-center gap-1">
                 <div className={`h-2 w-2 rounded-full ${userCompleted ? 'bg-(--accent)' : 'bg-(--border)'}`} />
-                <span className="text-xs text-(--text-secondary)">You</span>
+                <span>You</span>
               </div>
               <div className="flex items-center gap-1">
                 <div className={`h-2 w-2 rounded-full ${partnerCompleted ? 'bg-(--partner-color)' : 'bg-(--border)'}`} />
-                <span className="text-xs text-(--text-secondary)">Partner</span>
+                <span>Partner</span>
               </div>
             </div>
           )}
+        </div>
 
+        <div className="flex items-center gap-2">
           {/* Show nudge button for partner habits or shared habits when partner hasn't completed */}
           {isPartnerHabit ? (
             !completed && onNudge ? (

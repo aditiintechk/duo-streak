@@ -22,11 +22,12 @@ export async function GET(req: NextRequest) {
     const user = await User.findById(userId);
     const partnerId = user?.partnerId?.toString();
 
-    // Get date range for last 7 days
+    // Normalize today's date to midnight UTC
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const mondayOffset = (today.getDay() + 6) % 7;
+    const weekStart = new Date(today);
+    weekStart.setDate(weekStart.getDate() - mondayOffset);
 
     // Get habits
     const habits = await Habit.find({ userId });
@@ -36,9 +37,10 @@ export async function GET(req: NextRequest) {
 
     // Calculate weekly completion for user
     const weeklyData = [];
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + i);
       const nextDate = new Date(date);
       nextDate.setDate(nextDate.getDate() + 1);
 
@@ -58,9 +60,8 @@ export async function GET(req: NextRequest) {
           })
         : 0;
 
-      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       weeklyData.push({
-        day: dayNames[date.getDay()],
+        day: dayNames[i],
         you: youCompletions,
         partner: partnerCompletions,
       });
@@ -128,12 +129,12 @@ export async function GET(req: NextRequest) {
     );
 
     // Calculate this week's completion percentage
-    const weekStart = new Date(today);
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    const completionWeekStart = new Date(today);
+    completionWeekStart.setDate(completionWeekStart.getDate() - mondayOffset);
     const allCompletions = await HabitCompletion.countDocuments({
       habitId: { $in: habits.map((h) => h._id) },
       userId,
-      date: { $gte: weekStart },
+      date: { $gte: completionWeekStart },
       completed: true,
     });
     const totalPossible = totalHabits * 7;

@@ -76,10 +76,10 @@ export default function StatsPage() {
             <p className="mt-1 text-xs text-(--text-secondary)">Today's completion</p>
           </div>
           <div className="rounded-xl bg-(--card-bg) p-4 border border-(--border)">
-            <p className="mb-1 text-xs text-(--text-secondary)">Shared Streak</p>
+            <p className="mb-1 text-xs text-(--text-secondary)">Together Streak</p>
             <p className="text-2xl font-bold text-(--foreground)">{maxSharedStreak} days</p>
             <p className="mt-1 text-xs text-(--text-secondary)">
-              {maxSharedStreak > 0 ? 'Keep it up! 🔥' : 'No shared streaks yet'}
+              {maxSharedStreak > 0 ? 'Keep it up! 🔥' : 'No together streaks yet'}
             </p>
           </div>
         </div>
@@ -100,9 +100,9 @@ export default function StatsPage() {
           <ProgressChart data={stats.weeklyData} type="bar" />
         </div>
 
-        {/* Shared Streaks */}
+        {/* Together Streaks */}
         <div className="mb-4 rounded-xl bg-(--card-bg) p-4 border border-(--border)">
-          <h2 className="mb-3 text-lg font-semibold text-(--foreground)">Top Shared Streaks</h2>
+          <h2 className="mb-3 text-lg font-semibold text-(--foreground)">Top Together Streaks</h2>
           <div className="space-y-2">
             {stats.sharedStreaks.length > 0 ? (
               stats.sharedStreaks.map((item, index) => (
@@ -112,7 +112,7 @@ export default function StatsPage() {
                 >
                   <div>
                     <p className="text-sm font-medium text-(--foreground)">{item.habit}</p>
-                    <p className="text-xs text-(--text-secondary)">Shared habit</p>
+                    <p className="text-xs text-(--text-secondary)">Together habit</p>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-lg">🔥</span>
@@ -123,7 +123,7 @@ export default function StatsPage() {
               ))
             ) : (
               <div className="rounded-lg bg-(--background) p-3 text-center">
-                <p className="text-sm text-(--text-secondary)">No shared streaks yet</p>
+                <p className="text-sm text-(--text-secondary)">No together streaks yet</p>
               </div>
             )}
           </div>

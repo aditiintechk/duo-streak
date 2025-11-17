@@ -19,6 +19,7 @@ export default function TodoPage() {
 		'me' | 'partner' | 'both'
 	>('both')
 	const [isCreating, setIsCreating] = useState(false)
+	const [todoView, setTodoView] = useState<'todo' | 'completed'>('todo')
 
 	// Redirect to login if not authenticated (in useEffect to avoid render issues)
 	useEffect(() => {
@@ -58,8 +59,9 @@ export default function TodoPage() {
 		}
 	}
 
-	const completedCount = todos.filter((t) => t.completed).length
-	const totalCount = todos.length || 1
+	const filteredTodos = todos.filter((todo) =>
+		todoView === 'completed' ? todo.completed : !todo.completed
+	)
 
 	return (
 		<div className='min-h-screen bg-(--background) pb-16 sm:pb-0 sm:pt-14'>
@@ -79,26 +81,24 @@ export default function TodoPage() {
 					</button>
 				</div>
 
-				{/* Progress Bar */}
-				<div className='mb-4 rounded-xl bg-(--card-bg) p-4'>
-					<div className='mb-1.5 flex items-center justify-between text-xs'>
-						<span className='font-medium text-(--text-secondary)'>
-							Progress
-						</span>
-						<span className='font-semibold text-(--foreground)'>
-							{Math.round((completedCount / totalCount) * 100)}%
-						</span>
-					</div>
-					<div className='h-2 overflow-hidden rounded-full bg-(--border)'>
-						<div
-							className='h-full rounded-full bg-linear-to-r from-(--accent) to-(--partner-color) transition-all'
-							style={{
-								width: `${
-									(completedCount / totalCount) * 100
-								}%`,
-							}}
-						/>
-					</div>
+				{/* Todo view toggle */}
+				<div className='mb-4 flex gap-2 overflow-x-auto pb-2'>
+					{([
+						{ id: 'todo', label: 'Todo' },
+						{ id: 'completed', label: 'Completed' },
+					] as const).map((tab) => (
+						<button
+							key={tab.id}
+							onClick={() => setTodoView(tab.id)}
+							className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium transition-all ${
+								todoView === tab.id
+									? 'bg-(--accent) text-white shadow-md'
+									: 'bg-(--card-bg) text-(--text-secondary) hover:bg-(--border)'
+							}`}
+						>
+							{tab.label}
+						</button>
+					))}
 				</div>
 
 				{/* Todo List */}
@@ -109,8 +109,8 @@ export default function TodoPage() {
 								Loading todos...
 							</p>
 						</div>
-					) : todos.length > 0 ? (
-						todos.map((todo) => (
+					) : filteredTodos.length > 0 ? (
+						filteredTodos.map((todo) => (
 							<TodoItem
 								key={todo.id}
 								id={todo.id}
@@ -125,10 +125,14 @@ export default function TodoPage() {
 						<div className='rounded-xl border-2 border-dashed border-(--border) bg-(--card-bg) p-8 text-center'>
 							<div className='mb-2 text-2xl'>✨</div>
 							<p className='text-sm font-medium text-(--foreground) mb-1'>
-								No todos yet
+								{todoView === 'todo'
+									? 'All caught up!'
+									: 'No completed tasks yet'}
 							</p>
 							<p className='text-xs text-(--text-secondary)'>
-								Add one to get started!
+								{todoView === 'todo'
+									? 'Add a task or relax for a bit.'
+									: 'Finish a task and it will show here.'}
 							</p>
 						</div>
 					)}

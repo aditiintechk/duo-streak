@@ -72,7 +72,7 @@
 1. Go to **Habits** page
 2. Click **"New Habit"**
 3. Enter: `Morning Meditation`
-4. Select: **"Shared Habit"**
+4. Select: **"Together"**
 5. Click **"Create"**
 
 #### Test the Nudge:
@@ -80,7 +80,7 @@
 **In Window 1 (User1):**
 
 1. Go to **Habits** page
-2. Click on **"Shared"** tab
+2. Click on **"Together"** tab
 3. You should see "Morning Meditation"
 4. Click the **checkmark** to complete it (you complete it)
 5. Now you should see a **"Nudge"** button appear
@@ -100,7 +100,7 @@
 1. Go to **Habits** page
 2. Click **"New Habit"**
 3. Enter: `Evening Workout`
-4. Select: **"My Habit"**
+4. Select: **"Mine"**
 5. Click **"Create"**
 
 **In Window 2 (User2):**
