@@ -30,13 +30,25 @@ export async function GET(req: NextRequest) {
 
     const todos = await Todo.find(query).sort({ createdAt: -1 });
 
-    return NextResponse.json({
-      todos: todos.map((todo) => ({
+    const formattedTodos = todos.map((todo) => {
+      const isCreatedByCurrentUser = todo.userId.toString() === userId;
+
+      let assignedTo: 'me' | 'partner' | 'both' = todo.assignedTo;
+      if (!isCreatedByCurrentUser) {
+        if (assignedTo === 'me') assignedTo = 'partner';
+        else if (assignedTo === 'partner') assignedTo = 'me';
+      }
+
+      return {
         id: todo._id.toString(),
         text: todo.text,
         completed: todo.completed,
-        assignedTo: todo.assignedTo,
-      })),
+        assignedTo,
+      };
+    });
+
+    return NextResponse.json({
+      todos: formattedTodos,
     });
   } catch (error: any) {
     console.error('Get todos error:', error);
