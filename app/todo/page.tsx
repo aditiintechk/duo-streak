@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext'
 export default function TodoPage() {
 	const router = useRouter()
 	const { user, loading: authLoading } = useAuth()
-	const { todos, loading, toggleTodo, createTodo, deleteTodo } = useTodos()
+	const { todos, loading, toggleTodo, createTodo, updateTodo, deleteTodo } = useTodos()
 	const [showAddModal, setShowAddModal] = useState(false)
 	const [newTodoText, setNewTodoText] = useState('')
 	const [newTodoAssigned, setNewTodoAssigned] = useState<
@@ -20,6 +20,10 @@ export default function TodoPage() {
 	>('both')
 	const [isCreating, setIsCreating] = useState(false)
 	const [todoView, setTodoView] = useState<'todo' | 'completed'>('todo')
+	const [showEditModal, setShowEditModal] = useState(false)
+	const [editingTodoId, setEditingTodoId] = useState<string | null>(null)
+	const [editTodoText, setEditTodoText] = useState('')
+	const [isUpdating, setIsUpdating] = useState(false)
 
 	// Redirect to login if not authenticated (in useEffect to avoid render issues)
 	useEffect(() => {
@@ -118,6 +122,11 @@ export default function TodoPage() {
 								completed={todo.completed}
 								assignedTo={todo.assignedTo}
 								onToggle={() => toggleTodo(todo.id)}
+								onEdit={() => {
+									setEditingTodoId(todo.id)
+									setEditTodoText(todo.text)
+									setShowEditModal(true)
+								}}
 								onDelete={() => deleteTodo(todo.id)}
 							/>
 						))
@@ -206,6 +215,73 @@ export default function TodoPage() {
 										className='flex-1 py-2 rounded-lg bg-(--accent) text-white font-medium hover:bg-(--accent-dark) transition-all disabled:opacity-50'
 									>
 										{isCreating ? 'Creating...' : 'Create'}
+									</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				)}
+
+				{/* Edit Todo Modal */}
+				{showEditModal && editingTodoId && (
+					<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4'>
+						<div className='w-full max-w-md rounded-xl bg-(--card-bg) border border-(--border) p-6'>
+							<h2 className='text-xl font-bold text-(--foreground) mb-4'>
+								Edit Todo
+							</h2>
+							<form
+								onSubmit={async (e) => {
+									e.preventDefault()
+									if (!editTodoText.trim()) return
+
+									setIsUpdating(true)
+									try {
+										await updateTodo(editingTodoId, editTodoText.trim())
+										setShowEditModal(false)
+										setEditingTodoId(null)
+										setEditTodoText('')
+									} catch (error: any) {
+										alert(error.message || 'Failed to update todo')
+									} finally {
+										setIsUpdating(false)
+									}
+								}}
+								className='space-y-4'
+							>
+								<div>
+									<label className='block text-sm font-medium text-(--foreground) mb-1.5'>
+										Task
+									</label>
+									<input
+										type='text'
+										value={editTodoText}
+										onChange={(e) =>
+											setEditTodoText(e.target.value)
+										}
+										className='w-full px-4 py-2 rounded-lg border border-(--border) bg-(--background) text-(--foreground) focus:outline-none focus:ring-2 focus:ring-(--accent)'
+										placeholder='e.g., Plan weekend getaway'
+										required
+										autoFocus
+									/>
+								</div>
+								<div className='flex gap-3'>
+									<button
+										type='button'
+										onClick={() => {
+											setShowEditModal(false)
+											setEditingTodoId(null)
+											setEditTodoText('')
+										}}
+										className='flex-1 py-2 rounded-lg border border-(--border) bg-(--background) text-(--foreground) hover:bg-(--border) transition-all'
+									>
+										Cancel
+									</button>
+									<button
+										type='submit'
+										disabled={isUpdating}
+										className='flex-1 py-2 rounded-lg bg-(--accent) text-white font-medium hover:bg-(--accent-dark) transition-all disabled:opacity-50'
+									>
+										{isUpdating ? 'Updating...' : 'Update'}
 									</button>
 								</div>
 							</form>

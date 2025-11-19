@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Flame, Bell, Trash2 } from 'lucide-react';
+import { Check, Flame, MessageSquare, Trash2, Edit } from 'lucide-react';
 import ConfirmModal from './ConfirmModal';
 
 interface HabitCardProps {
@@ -10,7 +10,8 @@ interface HabitCardProps {
   completed: boolean;
   owner: 'me' | 'partner' | 'shared';
   onToggle: () => void;
-  onNudge?: () => void;
+  onMessage?: () => void;
+  onEdit?: () => void;
   onDelete?: () => void;
   sharedCompletion?: {
     user: boolean;
@@ -18,7 +19,7 @@ interface HabitCardProps {
   };
 }
 
-export default function HabitCard({ title, streak, completed, owner, onToggle, onNudge, onDelete, sharedCompletion }: HabitCardProps) {
+export default function HabitCard({ title, streak, completed, owner, onToggle, onMessage, onEdit, onDelete, sharedCompletion }: HabitCardProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const ownerColors = {
     me: 'bg-(--accent)/10 border-(--accent)/20',
@@ -67,15 +68,15 @@ export default function HabitCard({ title, streak, completed, owner, onToggle, o
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Show nudge button for partner habits or shared habits when partner hasn't completed */}
+          {/* Show message button for partner habits or shared habits when partner hasn't completed */}
           {isPartnerHabit ? (
-            !completed && onNudge ? (
+            !completed && onMessage ? (
               <button
-                onClick={onNudge}
+                onClick={onMessage}
                 className="flex items-center gap-1.5 rounded-lg bg-(--partner-color) px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-(--partner-color)/80 hover:shadow-md"
               >
-                <Bell className="h-3.5 w-3.5" />
-                Nudge
+                <MessageSquare className="h-3.5 w-3.5" />
+                Message
               </button>
             ) : completed ? (
               <div className="flex items-center gap-1.5 rounded-lg bg-(--success)/10 px-3 py-1.5 text-xs font-medium text-(--success)">
@@ -83,13 +84,13 @@ export default function HabitCard({ title, streak, completed, owner, onToggle, o
                 Done
               </div>
             ) : null
-          ) : isSharedHabit && sharedCompletion && userCompleted && !partnerCompleted && onNudge ? (
+          ) : isSharedHabit && sharedCompletion && userCompleted && !partnerCompleted && onMessage ? (
             <button
-              onClick={onNudge}
+              onClick={onMessage}
               className="flex items-center gap-1.5 rounded-lg bg-(--partner-color) px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-(--partner-color)/80 hover:shadow-md"
             >
-              <Bell className="h-3.5 w-3.5" />
-              Nudge
+              <MessageSquare className="h-3.5 w-3.5" />
+              Message
             </button>
           ) : (
             <>
@@ -103,6 +104,19 @@ export default function HabitCard({ title, streak, completed, owner, onToggle, o
               >
                 {userCompleted && <Check className="h-3.5 w-3.5" />}
               </button>
+              {/* Edit button */}
+              {onEdit && !isPartnerHabit && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit();
+                  }}
+                  className="opacity-60 hover:opacity-100 transition-opacity p-2 rounded-lg hover:bg-(--accent)/10 text-(--accent) hover:text-(--accent-dark)"
+                  aria-label="Edit habit"
+                >
+                  <Edit className="h-4 w-4" />
+                </button>
+              )}
               {/* Delete button - only show for non-partner habits */}
               {onDelete && !isPartnerHabit && (
                 <>

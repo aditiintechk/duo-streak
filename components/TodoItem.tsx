@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Trash2 } from 'lucide-react';
+import { Check, Trash2, Edit } from 'lucide-react';
 import ConfirmModal from './ConfirmModal';
 
 interface TodoItemProps {
@@ -10,10 +10,11 @@ interface TodoItemProps {
   completed: boolean;
   assignedTo: 'me' | 'partner' | 'both';
   onToggle: () => void;
+  onEdit?: () => void;
   onDelete?: () => void;
 }
 
-export default function TodoItem({ text, completed, assignedTo, onToggle, onDelete }: TodoItemProps) {
+export default function TodoItem({ text, completed, assignedTo, onToggle, onEdit, onDelete }: TodoItemProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const assignedColors = {
     me: 'border-l-(--accent)',
@@ -63,6 +64,18 @@ export default function TodoItem({ text, completed, assignedTo, onToggle, onDele
           >
             {tagLabels[assignedTo]}
           </span>
+          {onEdit && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              className="opacity-60 hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-(--accent)/10 text-(--accent) hover:text-(--accent-dark)"
+              aria-label="Edit todo"
+            >
+              <Edit className="h-4 w-4" />
+            </button>
+          )}
           {onDelete && (
             <>
               <button

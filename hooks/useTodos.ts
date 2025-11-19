@@ -64,6 +64,22 @@ export function useTodos() {
     }
   };
 
+  const updateTodo = async (id: string, text: string) => {
+    try {
+      const res = await fetch(`/api/todos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) throw new Error('Failed to update todo');
+      await fetchTodos(); // Refresh
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
   const deleteTodo = async (id: string) => {
     try {
       const res = await fetch(`/api/todos/${id}`, {
@@ -78,6 +94,6 @@ export function useTodos() {
     }
   };
 
-  return { todos, loading, error, toggleTodo, createTodo, deleteTodo, refetch: fetchTodos };
+  return { todos, loading, error, toggleTodo, createTodo, updateTodo, deleteTodo, refetch: fetchTodos };
 }
 

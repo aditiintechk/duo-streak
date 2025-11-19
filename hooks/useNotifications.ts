@@ -216,29 +216,12 @@ export function useNotifications() {
     }
   }, [isSupported, user, requestPermission]);
 
-  const sendNudge = useCallback(async (habitId: string, habitTitle: string): Promise<boolean> => {
-    try {
-      const response = await fetch('/api/notifications/nudge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ habitId, habitTitle }),
-      });
-
-      return response.ok;
-    } catch (error) {
-      console.error('Error sending nudge:', error);
-      return false;
-    }
-  }, []);
-
   return {
     isSupported,
     permission,
     isSubscribed,
     requestPermission,
     subscribeToNotifications,
-    sendNudge,
   };
 }
 

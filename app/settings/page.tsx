@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Sun, Moon, Bell } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -227,6 +228,17 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Stats Section */}
+        <div className="mb-4 rounded-xl bg-(--card-bg) p-4 border border-(--border)">
+          <h2 className="mb-3 text-lg font-semibold text-(--foreground)">Stats</h2>
+          <Link
+            href="/stats"
+            className="block w-full text-left text-sm text-(--foreground) hover:text-(--accent) transition-colors py-2"
+          >
+            View Statistics →
+          </Link>
+        </div>
+
         {/* Appearance Section */}
         <div className="mb-4 rounded-xl bg-(--card-bg) p-4 border border-(--border)">
           <h2 className="mb-3 text-lg font-semibold text-(--foreground)">Appearance</h2>
@@ -263,10 +275,10 @@ export default function SettingsPage() {
                   <p className="text-sm font-medium text-(--foreground) mb-0.5">Push Notifications</p>
                   <p className="text-xs text-(--text-secondary)">
                     {isSubscribed
-                      ? 'Enabled - You can receive nudges from your partner'
+                      ? 'Enabled - You can receive notifications'
                       : permission === 'denied'
                       ? 'Blocked - Enable in browser settings'
-                      : 'Disabled - Enable to receive nudges'}
+                      : 'Disabled - Enable to receive notifications'}
                   </p>
                 </div>
                 {!isSubscribed && permission !== 'denied' && (
@@ -277,7 +289,7 @@ export default function SettingsPage() {
                         console.log('Starting notification subscription...');
                         const success = await subscribeToNotifications();
                         if (success) {
-                          alert('Notifications enabled! You can now receive nudges from your partner.');
+                          alert('Notifications enabled!');
                           // State will update automatically via useNotifications hook
                         } else {
                           alert('Failed to enable notifications. Please check the browser console for errors and make sure you\'ve built the app with "npm run build".');

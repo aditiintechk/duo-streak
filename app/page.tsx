@@ -8,7 +8,6 @@ import HabitCard from '@/components/HabitCard'
 import CustomSelect from '@/components/CustomSelect'
 import { useHabits } from '@/hooks/useHabits'
 import { useAuth } from '@/contexts/AuthContext'
-import { useNotifications } from '@/hooks/useNotifications'
 
 type TabType = 'my' | 'partner' | 'shared'
 
@@ -16,15 +15,20 @@ export default function Home() {
 	const router = useRouter()
 	const { user, loading: authLoading } = useAuth()
 	const [activeTab, setActiveTab] = useState<TabType>('my')
-	const { habits, loading, toggleHabit, createHabit, deleteHabit } =
+	const { habits, loading, toggleHabit, createHabit, updateHabit, deleteHabit } =
 		useHabits(activeTab)
-	const { sendNudge, isSubscribed, subscribeToNotifications } =
-		useNotifications()
 	const [showAddModal, setShowAddModal] = useState(false)
 	const [newHabitTitle, setNewHabitTitle] = useState('')
 	const [newHabitOwner, setNewHabitOwner] = useState<'me' | 'shared'>('me')
 	const [isCreating, setIsCreating] = useState(false)
-	const [nudging, setNudging] = useState<string | null>(null)
+	const [showMessageModal, setShowMessageModal] = useState(false)
+	const [messageHabitId, setMessageHabitId] = useState<string | null>(null)
+	const [messageContent, setMessageContent] = useState('')
+	const [sendingMessage, setSendingMessage] = useState(false)
+	const [showEditModal, setShowEditModal] = useState(false)
+	const [editingHabitId, setEditingHabitId] = useState<string | null>(null)
+	const [editHabitTitle, setEditHabitTitle] = useState('')
+	const [isUpdating, setIsUpdating] = useState(false)
 
 	// Redirect to login if not authenticated (in useEffect to avoid render issues)
 	useEffect(() => {
@@ -135,53 +139,25 @@ export default function Home() {
 											? () => deleteHabit(habit.id)
 											: undefined
 									}
-									onNudge={
+									onMessage={
 										(habit.owner === 'partner' &&
 											!habit.completed) ||
 										(habit.owner === 'shared' &&
 											habit.sharedCompletion &&
 											habit.sharedCompletion.user &&
 											!habit.sharedCompletion.partner)
-											? async () => {
-													if (!isSubscribed) {
-														const subscribed =
-															await subscribeToNotifications()
-														if (!subscribed) {
-															alert(
-																'Please enable notifications to send nudges'
-															)
-															return
-														}
-													}
-
-													setNudging(habit.id)
-													try {
-														const success =
-															await sendNudge(
-																habit.id,
-																habit.title
-															)
-														if (success) {
-															// Show success feedback
-															console.log(
-																'Nudge sent successfully'
-															)
-														} else {
-															alert(
-																'Failed to send nudge. Make sure your partner has enabled notifications.'
-															)
-														}
-													} catch (error) {
-														console.error(
-															'Error sending nudge:',
-															error
-														)
-														alert(
-															'Failed to send nudge'
-														)
-													} finally {
-														setNudging(null)
-													}
+											? () => {
+													setMessageHabitId(habit.id)
+													setShowMessageModal(true)
+											  }
+											: undefined
+									}
+									onEdit={
+										canDelete
+											? () => {
+													setEditingHabitId(habit.id)
+													setEditHabitTitle(habit.title)
+													setShowEditModal(true)
 											  }
 											: undefined
 									}
@@ -266,6 +242,155 @@ export default function Home() {
 										className='flex-1 py-2 rounded-lg bg-(--accent) text-white font-medium hover:bg-(--accent-dark) transition-all disabled:opacity-50'
 									>
 										{isCreating ? 'Creating...' : 'Create'}
+									</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				)}
+
+				{/* Send Message Modal */}
+				{showMessageModal && messageHabitId && (
+					<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4'>
+						<div className='w-full max-w-md rounded-xl bg-(--card-bg) border border-(--border) p-6'>
+							<h2 className='text-xl font-bold text-(--foreground) mb-4'>
+								Send Message
+							</h2>
+							<form
+								onSubmit={async (e) => {
+									e.preventDefault()
+									if (!messageContent.trim()) return
+
+									setSendingMessage(true)
+									try {
+										const habit = habits.find(h => h.id === messageHabitId)
+										const res = await fetch('/api/messages', {
+											method: 'POST',
+											headers: { 'Content-Type': 'application/json' },
+											credentials: 'include',
+											body: JSON.stringify({
+												content: messageContent.trim(),
+												relatedHabitId: messageHabitId,
+											}),
+										})
+
+										if (!res.ok) {
+											const data = await res.json()
+											throw new Error(data.error || 'Failed to send message')
+										}
+
+										setMessageContent('')
+										setShowMessageModal(false)
+										setMessageHabitId(null)
+										alert('Message sent!')
+									} catch (error: any) {
+										alert(error.message || 'Failed to send message')
+									} finally {
+										setSendingMessage(false)
+									}
+								}}
+								className='space-y-4'
+							>
+								<div>
+									<label className='block text-sm font-medium text-(--foreground) mb-1.5'>
+										Message
+									</label>
+									<textarea
+										value={messageContent}
+										onChange={(e) =>
+											setMessageContent(e.target.value)
+										}
+										className='w-full px-4 py-2 rounded-lg border border-(--border) bg-(--background) text-(--foreground) focus:outline-none focus:ring-2 focus:ring-(--accent) min-h-[100px]'
+										placeholder='Send a motivational message to your partner...'
+										required
+										autoFocus
+									/>
+								</div>
+								<div className='flex gap-3'>
+									<button
+										type='button'
+										onClick={() => {
+											setShowMessageModal(false)
+											setMessageContent('')
+											setMessageHabitId(null)
+										}}
+										className='flex-1 py-2 rounded-lg border border-(--border) bg-(--background) text-(--foreground) hover:bg-(--border) transition-all'
+									>
+										Cancel
+									</button>
+									<button
+										type='submit'
+										disabled={sendingMessage}
+										className='flex-1 py-2 rounded-lg bg-(--accent) text-white font-medium hover:bg-(--accent-dark) transition-all disabled:opacity-50'
+									>
+										{sendingMessage ? 'Sending...' : 'Send'}
+									</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				)}
+
+				{/* Edit Habit Modal */}
+				{showEditModal && editingHabitId && (
+					<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4'>
+						<div className='w-full max-w-md rounded-xl bg-(--card-bg) border border-(--border) p-6'>
+							<h2 className='text-xl font-bold text-(--foreground) mb-4'>
+								Edit Habit
+							</h2>
+							<form
+								onSubmit={async (e) => {
+									e.preventDefault()
+									if (!editHabitTitle.trim()) return
+
+									setIsUpdating(true)
+									try {
+										await updateHabit(editingHabitId, editHabitTitle.trim())
+										setShowEditModal(false)
+										setEditingHabitId(null)
+										setEditHabitTitle('')
+									} catch (error: any) {
+										alert(error.message || 'Failed to update habit')
+									} finally {
+										setIsUpdating(false)
+									}
+								}}
+								className='space-y-4'
+							>
+								<div>
+									<label className='block text-sm font-medium text-(--foreground) mb-1.5'>
+										Habit Name
+									</label>
+									<input
+										type='text'
+										value={editHabitTitle}
+										onChange={(e) =>
+											setEditHabitTitle(e.target.value)
+										}
+										className='w-full px-4 py-2 rounded-lg border border-(--border) bg-(--background) text-(--foreground) focus:outline-none focus:ring-2 focus:ring-(--accent)'
+										placeholder='e.g., Morning Meditation'
+										required
+										autoFocus
+									/>
+								</div>
+								<div className='flex gap-3'>
+									<button
+										type='button'
+										onClick={() => {
+											setShowEditModal(false)
+											setEditingHabitId(null)
+											setEditHabitTitle('')
+										}}
+										className='flex-1 py-2 rounded-lg border border-(--border) bg-(--background) text-(--foreground) hover:bg-(--border) transition-all'
+									>
+										Cancel
+									</button>
+									<button
+										type='submit'
+										disabled={isUpdating}
+										className='flex-1 py-2 rounded-lg bg-(--accent) text-white font-medium hover:bg-(--accent-dark) transition-all disabled:opacity-50'
+									>
+										{isUpdating ? 'Updating...' : 'Update'}
 									</button>
 								</div>
 							</form>

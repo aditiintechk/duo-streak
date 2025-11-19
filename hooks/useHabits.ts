@@ -69,6 +69,22 @@ export function useHabits(filter: 'my' | 'partner' | 'shared' = 'my') {
     }
   };
 
+  const updateHabit = async (id: string, title: string) => {
+    try {
+      const res = await fetch(`/api/habits/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ title }),
+      });
+      if (!res.ok) throw new Error('Failed to update habit');
+      await fetchHabits(); // Refresh
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
   const deleteHabit = async (id: string) => {
     try {
       const res = await fetch(`/api/habits/${id}`, {
@@ -83,6 +99,6 @@ export function useHabits(filter: 'my' | 'partner' | 'shared' = 'my') {
     }
   };
 
-  return { habits, loading, error, toggleHabit, createHabit, deleteHabit, refetch: fetchHabits };
+  return { habits, loading, error, toggleHabit, createHabit, updateHabit, deleteHabit, refetch: fetchHabits };
 }
 
