@@ -16,6 +16,8 @@ interface TodoItemProps {
 
 export default function TodoItem({ text, completed, assignedTo, onToggle, onEdit, onDelete }: TodoItemProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [justCompleted, setJustCompleted] = useState(false);
+  
   const assignedColors = {
     me: 'border-l-(--accent)',
     partner: 'border-l-(--partner-color)',
@@ -34,19 +36,30 @@ export default function TodoItem({ text, completed, assignedTo, onToggle, onEdit
     both: 'bg-gradient-to-r from-(--accent)/10 to-(--partner-color)/10 text-(--foreground) border-(--accent)/20',
   };
 
+  const handleToggle = () => {
+    const wasCompleted = completed;
+    onToggle();
+    
+    // Trigger animation if completing
+    if (!wasCompleted) {
+      setJustCompleted(true);
+      setTimeout(() => setJustCompleted(false), 600);
+    }
+  };
+
   return (
     <div
-      className={`group relative flex items-center gap-3 rounded-lg border-l-4 bg-(--card-bg) p-3 transition-all hover:shadow-md hover:scale-[1.01] ${assignedColors[assignedTo]} ${
+      className={`group relative flex items-center gap-3 rounded-lg border-l-4 bg-(--card-bg) p-3 transition-all duration-300 hover:shadow-md hover:scale-[1.01] ${assignedColors[assignedTo]} ${
         completed ? 'opacity-60' : ''
-      }`}
+      } ${justCompleted ? 'animate-pulse' : ''}`}
     >
       <button
-        onClick={onToggle}
-        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-all ${
+        onClick={handleToggle}
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-all duration-200 ${
           completed
-            ? 'border-(--success) bg-(--success) text-white'
-            : 'border-(--border) hover:border-(--accent)'
-        }`}
+            ? 'border-(--success) bg-(--success) text-white scale-110 shadow-md'
+            : 'border-(--border) hover:border-(--accent) hover:scale-105'
+        } ${justCompleted ? 'animate-bounce' : ''}`}
       >
         {completed && <Check className="h-3 w-3" />}
       </button>

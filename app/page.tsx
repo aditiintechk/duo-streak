@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Plus } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { Plus, GripVertical } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core'
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import Navigation from '@/components/Navigation'
 import HabitCard from '@/components/HabitCard'
 import CustomSelect from '@/components/CustomSelect'
@@ -29,6 +31,16 @@ export default function Home() {
 	const [editingHabitId, setEditingHabitId] = useState<string | null>(null)
 	const [editHabitTitle, setEditHabitTitle] = useState('')
 	const [isUpdating, setIsUpdating] = useState(false)
+	const [isReorderMode, setIsReorderMode] = useState(false)
+	const [orderKey, setOrderKey] = useState(0) // Force re-render when order changes
+
+	// Set up drag and drop sensors
+	const sensors = useSensors(
+		useSensor(PointerSensor),
+		useSensor(KeyboardSensor, {
+			coordinateGetter: sortableKeyboardCoordinates,
+		})
+	)
 
 	// Redirect to login if not authenticated (in useEffect to avoid render issues)
 	useEffect(() => {
@@ -36,6 +48,67 @@ export default function Home() {
 			router.push('/login')
 		}
 	}, [authLoading, user, router])
+
+	// Load and apply habit order from localStorage
+	const getStoredOrder = (filter: TabType): string[] => {
+		if (typeof window === 'undefined') return []
+		const stored = localStorage.getItem(`habit-order-${filter}`)
+		return stored ? JSON.parse(stored) : []
+	}
+
+	const saveOrder = (filter: TabType, order: string[]) => {
+		if (typeof window === 'undefined') return
+		localStorage.setItem(`habit-order-${filter}`, JSON.stringify(order))
+	}
+
+	// Apply stored order to habits
+	const orderedHabits = useMemo(() => {
+		if (habits.length === 0) return []
+		
+		const storedOrder = getStoredOrder(activeTab)
+		const habitMap = new Map(habits.map(h => [h.id, h]))
+		
+		// Start with stored order, then add any new habits that aren't in the order
+		const ordered: typeof habits = []
+		const usedIds = new Set<string>()
+		
+		// Add habits in stored order
+		for (const id of storedOrder) {
+			if (habitMap.has(id)) {
+				ordered.push(habitMap.get(id)!)
+				usedIds.add(id)
+			}
+		}
+		
+		// Add any new habits that weren't in the stored order
+		for (const habit of habits) {
+			if (!usedIds.has(habit.id)) {
+				ordered.push(habit)
+			}
+		}
+		
+		return ordered
+	}, [habits, activeTab, orderKey])
+
+	// Handle drag end event
+	const handleDragEnd = (event: DragEndEvent) => {
+		const { active, over } = event
+
+		if (!over || active.id === over.id) {
+			return
+		}
+
+		const oldIndex = orderedHabits.findIndex((habit) => habit.id === active.id)
+		const newIndex = orderedHabits.findIndex((habit) => habit.id === over.id)
+
+		if (oldIndex !== -1 && newIndex !== -1) {
+			const newOrder = arrayMove(orderedHabits, oldIndex, newIndex)
+			const orderIds = newOrder.map(h => h.id)
+			saveOrder(activeTab, orderIds)
+			// Force re-render by updating order key
+			setOrderKey(prev => prev + 1)
+		}
+	}
 
 	// Show loading state while checking auth
 	if (authLoading) {
@@ -58,6 +131,8 @@ export default function Home() {
 		setIsCreating(true)
 		try {
 			await createHabit(newHabitTitle.trim(), newHabitOwner)
+			// The order will be updated automatically when habits refresh
+			// New habits will be appended to the end of the stored order
 			setNewHabitTitle('')
 			setNewHabitOwner('me')
 			setShowAddModal(false)
@@ -77,18 +152,31 @@ export default function Home() {
 					<h1 className='text-2xl font-bold text-(--foreground)'>
 						Habits
 					</h1>
-					<button
-						onClick={() => {
-							setNewHabitOwner(
-								activeTab === 'shared' ? 'shared' : 'me'
-							)
-							setShowAddModal(true)
-						}}
-						className='flex items-center gap-1.5 rounded-lg bg-(--accent) px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-(--accent-dark) hover:shadow-md'
-					>
-						<Plus className='h-3.5 w-3.5' />
-						New Habit
-					</button>
+					<div className='flex items-center gap-2'>
+						<button
+							onClick={() => setIsReorderMode(!isReorderMode)}
+							className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+								isReorderMode
+									? 'bg-(--accent) text-white hover:bg-(--accent-dark) hover:shadow-md'
+									: 'border border-(--border) bg-(--card-bg) text-(--foreground) hover:bg-(--border)'
+							}`}
+						>
+							<GripVertical className='h-3.5 w-3.5' />
+							{isReorderMode ? 'Done' : 'Reorder'}
+						</button>
+						<button
+							onClick={() => {
+								setNewHabitOwner(
+									activeTab === 'shared' ? 'shared' : 'me'
+								)
+								setShowAddModal(true)
+							}}
+							className='flex items-center gap-1.5 rounded-lg bg-(--accent) px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-(--accent-dark) hover:shadow-md'
+						>
+							<Plus className='h-3.5 w-3.5' />
+							New Habit
+						</button>
+					</div>
 				</div>
 
 				{/* Tabs */}
@@ -120,50 +208,64 @@ export default function Home() {
 								Loading habits...
 							</p>
 						</div>
-					) : habits.length > 0 ? (
-						habits.map((habit) => {
-							// Only allow delete for my habits and shared habits (not partner habits)
-							const canDelete =
-								habit.owner === 'me' || habit.owner === 'shared'
-							return (
-								<HabitCard
-									key={habit.id}
-									title={habit.title}
-									streak={habit.streak}
-									completed={habit.completed}
-									owner={habit.owner}
-									sharedCompletion={habit.sharedCompletion}
-									onToggle={() => toggleHabit(habit.id)}
-									onDelete={
-										canDelete
-											? () => deleteHabit(habit.id)
-											: undefined
-									}
-									onMessage={
-										(habit.owner === 'partner' &&
-											!habit.completed) ||
-										(habit.owner === 'shared' &&
-											habit.sharedCompletion &&
-											habit.sharedCompletion.user &&
-											!habit.sharedCompletion.partner)
-											? () => {
-													setMessageHabitId(habit.id)
-													setShowMessageModal(true)
-											  }
-											: undefined
-									}
-									onEdit={
-										canDelete
-											? () => {
-													setEditingHabitId(habit.id)
-													setEditHabitTitle(habit.title)
-													setShowEditModal(true)
-											  }
-											: undefined
-									}
-								/>
-							)
-						})
+					) : orderedHabits.length > 0 ? (
+						<DndContext
+							sensors={sensors}
+							collisionDetection={closestCenter}
+							onDragEnd={handleDragEnd}
+						>
+							<SortableContext
+								items={orderedHabits.map(h => h.id)}
+								strategy={verticalListSortingStrategy}
+								disabled={!isReorderMode}
+							>
+								{orderedHabits.map((habit) => {
+									// Only allow delete for my habits and shared habits (not partner habits)
+									const canDelete =
+										habit.owner === 'me' || habit.owner === 'shared'
+									return (
+										<HabitCard
+											key={habit.id}
+											id={habit.id}
+											title={habit.title}
+											streak={habit.streak}
+											completed={habit.completed}
+											owner={habit.owner}
+											sharedCompletion={habit.sharedCompletion}
+											onToggle={() => toggleHabit(habit.id)}
+											onDelete={
+												canDelete
+													? () => deleteHabit(habit.id)
+													: undefined
+											}
+											onMessage={
+												(habit.owner === 'partner' &&
+													!habit.completed) ||
+												(habit.owner === 'shared' &&
+													habit.sharedCompletion &&
+													habit.sharedCompletion.user &&
+													!habit.sharedCompletion.partner)
+													? () => {
+															setMessageHabitId(habit.id)
+															setShowMessageModal(true)
+													  }
+													: undefined
+											}
+											onEdit={
+												canDelete
+													? () => {
+															setEditingHabitId(habit.id)
+															setEditHabitTitle(habit.title)
+															setShowEditModal(true)
+													  }
+													: undefined
+											}
+											isReorderMode={isReorderMode}
+										/>
+									)
+								})}
+							</SortableContext>
+						</DndContext>
 					) : (
 						<div className='rounded-xl border-2 border-dashed border-(--border) bg-(--card-bg) p-8 text-center'>
 							<div className='mb-2 text-2xl'>✨</div>

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Message from '@/models/Message';
 import User from '@/models/User';
+import Todo from '@/models/Todo';
+import Habit from '@/models/Habit';
 import { getUserIdFromRequest } from '@/lib/auth';
 
 // GET - Fetch messages for the current user

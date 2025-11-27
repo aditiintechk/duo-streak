@@ -81,17 +81,38 @@ export async function GET(req: NextRequest) {
           });
 
           // Calculate streak - only counts when BOTH completed
+          // Find the most recent date where both completed
           let streak = 0;
-          for (let i = 0; i < 30; i++) {
-            const checkDate = new Date(today);
-            checkDate.setDate(today.getDate() - i);
-            const dateKey = checkDate.toISOString().split('T')[0];
-            const dayCompletions = completionsByDate.get(dateKey);
+          const sortedDates = Array.from(completionsByDate.keys())
+            .map(d => new Date(d))
+            .sort((a, b) => b.getTime() - a.getTime());
+          
+          if (sortedDates.length > 0) {
+            // Find the most recent date where both users completed
+            let mostRecentBothCompleted: Date | null = null;
+            for (const date of sortedDates) {
+              const dateKey = date.toISOString().split('T')[0];
+              const dayCompletions = completionsByDate.get(dateKey);
+              if (dayCompletions && dayCompletions.user && dayCompletions.partner) {
+                mostRecentBothCompleted = date;
+                break;
+              }
+            }
             
-            if (dayCompletions && dayCompletions.user && dayCompletions.partner) {
-              streak++;
-            } else {
-              break;
+            // Count consecutive days backwards from the most recent both-completed date
+            if (mostRecentBothCompleted) {
+              for (let i = 0; i < 60; i++) {
+                const checkDate = new Date(mostRecentBothCompleted);
+                checkDate.setDate(mostRecentBothCompleted.getDate() - i);
+                const dateKey = checkDate.toISOString().split('T')[0];
+                const dayCompletions = completionsByDate.get(dateKey);
+                
+                if (dayCompletions && dayCompletions.user && dayCompletions.partner) {
+                  streak++;
+                } else {
+                  break;
+                }
+              }
             }
           }
 
@@ -131,26 +152,34 @@ export async function GET(req: NextRequest) {
             completed: true,
           })
             .sort({ date: -1 })
-            .limit(30);
+            .limit(60);
 
           let streak = 0;
-          const sortedCompletions = completions.sort(
-            (a, b) => b.date.getTime() - a.date.getTime()
-          );
-
-          for (let i = 0; i < sortedCompletions.length; i++) {
-            const completionDate = new Date(sortedCompletions[i].date);
-            completionDate.setHours(0, 0, 0, 0);
-            const expectedDate = new Date(today);
-            expectedDate.setDate(expectedDate.getDate() - i);
-
-            if (
-              completionDate.getTime() === expectedDate.getTime() ||
-              (i === 0 && completionDate.getTime() === today.getTime())
-            ) {
-              streak++;
-            } else {
-              break;
+          if (completions.length > 0) {
+            // Find the most recent completion date
+            const mostRecentCompletion = new Date(completions[0].date);
+            mostRecentCompletion.setHours(0, 0, 0, 0);
+            
+            // Count consecutive days backwards from the most recent completion
+            const completionDates = new Set(
+              completions.map(c => {
+                const d = new Date(c.date);
+                d.setHours(0, 0, 0, 0);
+                return d.getTime();
+              })
+            );
+            
+            // Start from the most recent completion and count backwards
+            for (let i = 0; i < 60; i++) {
+              const checkDate = new Date(mostRecentCompletion);
+              checkDate.setDate(mostRecentCompletion.getDate() - i);
+              const checkTime = checkDate.getTime();
+              
+              if (completionDates.has(checkTime)) {
+                streak++;
+              } else {
+                break;
+              }
             }
           }
 
@@ -177,26 +206,34 @@ export async function GET(req: NextRequest) {
           completed: true,
         })
           .sort({ date: -1 })
-          .limit(30);
+          .limit(60);
 
         let streak = 0;
-        const sortedCompletions = completions.sort(
-          (a, b) => b.date.getTime() - a.date.getTime()
-        );
-
-        for (let i = 0; i < sortedCompletions.length; i++) {
-          const completionDate = new Date(sortedCompletions[i].date);
-          completionDate.setHours(0, 0, 0, 0);
-          const expectedDate = new Date(today);
-          expectedDate.setDate(expectedDate.getDate() - i);
-
-          if (
-            completionDate.getTime() === expectedDate.getTime() ||
-            (i === 0 && completionDate.getTime() === today.getTime())
-          ) {
-            streak++;
-          } else {
-            break;
+        if (completions.length > 0) {
+          // Find the most recent completion date
+          const mostRecentCompletion = new Date(completions[0].date);
+          mostRecentCompletion.setHours(0, 0, 0, 0);
+          
+          // Count consecutive days backwards from the most recent completion
+          const completionDates = new Set(
+            completions.map(c => {
+              const d = new Date(c.date);
+              d.setHours(0, 0, 0, 0);
+              return d.getTime();
+            })
+          );
+          
+          // Start from the most recent completion and count backwards
+          for (let i = 0; i < 60; i++) {
+            const checkDate = new Date(mostRecentCompletion);
+            checkDate.setDate(mostRecentCompletion.getDate() - i);
+            const checkTime = checkDate.getTime();
+            
+            if (completionDates.has(checkTime)) {
+              streak++;
+            } else {
+              break;
+            }
           }
         }
 

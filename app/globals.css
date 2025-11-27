@@ -69,6 +69,39 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
+/* Smooth animations for completions */
+@keyframes completion-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes completion-bounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.15);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  75% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-completion-pulse {
+  animation: completion-pulse 0.6s ease-in-out;
+}
+
+.animate-completion-bounce {
+  animation: completion-bounce 0.6s ease-in-out;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

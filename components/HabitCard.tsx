@@ -1,10 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Flame, MessageSquare, Trash2, Edit } from 'lucide-react';
+import { Check, Flame, MessageSquare, Trash2, Edit, GripVertical } from 'lucide-react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import ConfirmModal from './ConfirmModal';
 
 interface HabitCardProps {
+  id: string;
   title: string;
   streak: number;
   completed: boolean;
@@ -17,10 +20,38 @@ interface HabitCardProps {
     user: boolean;
     partner: boolean;
   };
+  isReorderMode?: boolean;
 }
 
-export default function HabitCard({ title, streak, completed, owner, onToggle, onMessage, onEdit, onDelete, sharedCompletion }: HabitCardProps) {
+export default function HabitCard({ id, title, streak, completed, owner, onToggle, onMessage, onEdit, onDelete, sharedCompletion, isReorderMode = false }: HabitCardProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [justCompleted, setJustCompleted] = useState(false);
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id, disabled: !isReorderMode });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const handleToggle = () => {
+    const wasCompleted = completed;
+    onToggle();
+    
+    // Trigger animation if completing
+    if (!wasCompleted) {
+      setJustCompleted(true);
+      setTimeout(() => setJustCompleted(false), 600);
+    }
+  };
+
   const ownerColors = {
     me: 'bg-(--accent)/10 border-(--accent)/20',
     partner: 'bg-(--partner-color)/10 border-(--partner-color)/20',
@@ -40,11 +71,23 @@ export default function HabitCard({ title, streak, completed, owner, onToggle, o
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-xl border-2 p-3 transition-all hover:shadow-lg hover:scale-[1.01] ${ownerColors[owner]} ${
+      ref={setNodeRef}
+      style={style}
+      className={`group relative overflow-hidden rounded-xl border-2 p-3 transition-all duration-300 ${isReorderMode ? 'cursor-grab active:cursor-grabbing' : 'hover:shadow-lg hover:scale-[1.01]'} ${ownerColors[owner]} ${
         (isSharedHabit && sharedCompletion && userCompleted && partnerCompleted) || (!isSharedHabit && userCompleted) ? 'opacity-90' : ''
-      }`}
+      } ${isDragging ? 'z-50' : ''} ${justCompleted ? 'animate-pulse' : ''}`}
     >
       <div className="flex items-center justify-between gap-3">
+        {isReorderMode && (
+          <div
+            {...attributes}
+            {...listeners}
+            className="flex items-center cursor-grab active:cursor-grabbing p-1 rounded hover:bg-(--accent)/20 text-(--accent) transition-colors touch-none"
+            aria-label="Drag to reorder"
+          >
+            <GripVertical className="h-5 w-5" />
+          </div>
+        )}
         <div className="flex-1">
           {streak > 0 && (
             <span className="mb-1 inline-flex items-center gap-1 rounded-full bg-(--accent)/20 px-1.5 py-0.5 text-xs font-semibold text-(--accent)">
@@ -69,7 +112,7 @@ export default function HabitCard({ title, streak, completed, owner, onToggle, o
 
         <div className="flex items-center gap-2">
           {/* Show message button for partner habits or shared habits when partner hasn't completed */}
-          {isPartnerHabit ? (
+          {!isReorderMode && (isPartnerHabit ? (
             !completed && onMessage ? (
               <button
                 onClick={onMessage}
@@ -95,12 +138,12 @@ export default function HabitCard({ title, streak, completed, owner, onToggle, o
           ) : (
             <>
               <button
-                onClick={onToggle}
-                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-all shadow-sm ${
+                onClick={handleToggle}
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 shadow-sm ${
                   userCompleted
-                    ? 'border-(--success) bg-(--success) text-white shadow-md'
-                    : 'border-(--accent) bg-(--card-bg) hover:border-(--accent-dark) hover:bg-(--accent)/20 hover:shadow-md'
-                }`}
+                    ? 'border-(--success) bg-(--success) text-white shadow-md scale-110'
+                    : 'border-(--accent) bg-(--card-bg) hover:border-(--accent-dark) hover:bg-(--accent)/20 hover:shadow-md hover:scale-105'
+                } ${justCompleted ? 'animate-bounce' : ''}`}
               >
                 {userCompleted && <Check className="h-3.5 w-3.5" />}
               </button>
@@ -145,7 +188,7 @@ export default function HabitCard({ title, streak, completed, owner, onToggle, o
                 </>
               )}
             </>
-          )}
+          ))}
         </div>
       </div>
     </div>
